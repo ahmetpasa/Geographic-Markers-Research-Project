@@ -1,145 +1,88 @@
 import cfscrape
 from bs4 import BeautifulSoup
 
-before_year = '2019'
-after_year = '2000'
-articles_per_page = 500
-british_journal_url = 'https://onlinelibrary.wiley.com/action/doSearch?AfterYear=' + after_year + '&BeforeYear=' + before_year + '&SeriesKey=14684446&content=articlesChapters&countTerms=true&pageSize=500&sortBy=Earliest&startPage=0&target=' + str(articles_per_page)
-page_count = 0
-count = 0
+before_year = 2019
+after_year = 2000
+british_journal_url = 'https://onlinelibrary.wiley.com/loi/14684446/year/'
 articles_we_wont_scrape = ['COMMENTARY', 'Commentary', 'Commentaries', 'Review', 'Erratum', 'Corrigendum', 'REVIEW', 'Book',
                            'Notes to contributors', 'Editorial announcement', 'VOLUME INDEX', 'Comments', '– By',
-                           'Notes to Contributors', 'Issue Information ‐ Toc', 'Reviews', 'reviews', 'Books reviews',
-                           'Issue Information', 'Editorial', 'Issue Information ‐ TOC', 'Early View', 'Editor']
+                           'Replies', 'Notes to Contributors', 'Issue Information ‐ Toc', 'Reviews', 'reviews',
+                           'Books reviews', '– Edited by', 'Issue Information', 'Editorial', 'Issue Information ‐ TOC',
+                           'Early View', 'Editor', 'commentators', 'Reply', 'reply']
 
+scraper = cfscrape.create_scraper()
+scraper_2 = cfscrape.create_scraper()
+html_source = scraper.get(british_journal_url).text
+soup = BeautifulSoup(html_source, 'lxml')
 
+journal_title = soup.find('span', 'journalTitle').text.split(',')[1].lstrip()  # Variable 1
 
+if journal_title in 'American Sociological Review' or 'British Journal of Sociology':
+    geographic_coverage = 2
+elif journal_title in 'Gender Society' or 'Social Forces':
+    geographic_coverage = 1
+elif journal_title in 'European Sociological Review':
+    geographic_coverage = 3
+elif journal_title in 'Modern China or New Perspectives on Turkey':
+    geographic_coverage = 4
 
+print(geographic_coverage) # Variable 2
 
-try:
-    scraper = cfscrape.create_scraper()
-    html_source = scraper.get(british_journal_url).text
-    soup = BeautifulSoup(html_source, 'lxml')
-    result_count = soup.find('span', class_= 'result__count').text
+print()
 
-except:
-    print('No articles in this range')
+count = 0
+for i in range(before_year, after_year - 1, -1):
 
-
-result_count = result_count.replace(',', '')
-
-result_count_int = int(result_count)
-
-page_count = result_count_int / articles_per_page
-
-if page_count.is_integer():
-    pass
-else:
-    page_count = int(page_count) + 1
-
-for i in range(page_count):
-    british_journal_url = 'https://onlinelibrary.wiley.com/action/doSearch?AfterYear=' + after_year + '&BeforeYear=' + before_year + '&SeriesKey=14684446&content=articlesChapters&countTerms=true&pageSize=500&sortBy=Earliest&startPage=' + str(i) + '&target=' + str(
-        articles_per_page)
-
-    html_source = scraper.get(british_journal_url).text
-
+    html_source = scraper.get(british_journal_url + str(i)).text
     soup = BeautifulSoup(html_source, 'lxml')
 
-    for journal in soup.findAll('li', class_ = 'clearfix separator search__item exportCitationWrapper'):
-        title_of_article = journal.h2.a.text
+    for journal in soup.findAll('li', class_= 'card clearfix'):
 
-        volume_of_article_with_other_data = journal.find('a', class_='publication_meta_volume_issue').text
+        issue_url = 'https://onlinelibrary.wiley.com' + journal.find('a')['href']
+        issue_and_volume_info = journal.find('a', class_ = 'visitable').text
+        issue_and_volume_info = issue_and_volume_info.split(" ")
+        volume_number = issue_and_volume_info[1].split(',')[0]
+        issue_number = issue_and_volume_info[3]
+        year = i
 
-        try:
-            journal_type = journal.find('span',class_='meta__type').text
-        except:
-            journal_type = ''
+        html_source_2 = scraper_2.get(issue_url).text
+        article_soup = BeautifulSoup(html_source_2, 'lxml')
 
+        article_order_counter = 0
 
+        for articles in article_soup.findAll('div', class_='card issue-items-container exportCitationWrapper'):
+            if not articles.find('h3'):
+                for article_order_in_issue in articles.findAll('a',class_='issue-item__title visitable'):
+                    if any(word in article_order_in_issue.h2.text for word in articles_we_wont_scrape):
+                        pass
+                    else:
+                        article_order_counter = article_order_counter + 1
 
-        if any(word in journal_type for word in articles_we_wont_scrape):
-            pass
-        elif any(word in title_of_article for word in articles_we_wont_scrape):
+                        title_of_article = article_order_in_issue.h2.text
+                        print(title_of_article)
+                        print(year)
+                        print('volume number is ' + volume_number)
+                        print('issue number is ' + issue_number)
+                        print('order in issue is ' + str(article_order_counter))
+                        print()
 
-            pass
-        elif "Early" in volume_of_article_with_other_data:
-                pass
-
-        else:
-
-            journal_title = 'The British Journal of Sociology'   # Variable 1
-
-            geographic_coverage = 2     # Variable 2
-
-            print(title_of_article)    # Variable 6
-
-            year_of_article_with_other_data = journal.p.text
-            year_of_article = year_of_article_with_other_data.split(" ")[4]
-            year_of_article = year_of_article.replace("\n", "")
-            print(year_of_article)  # Variable 3
-
-            volume_of_article_with_other_data = journal.find('a', class_='publication_meta_volume_issue').text
-
-
-
-            volume_of_article = volume_of_article_with_other_data.split(" ")[1]
-
-            volume_of_article = volume_of_article.split(",")[0]
-
-            issue_of_article = volume_of_article_with_other_data.split(" ")[3]
-
-            article_issue_list_source = journal.find('a', class_ = 'publication_meta_volume_issue')['href']
-            article_issue_list_source_url = 'https://onlinelibrary.wiley.com' + article_issue_list_source
-
-            scraper_2 = cfscrape.create_scraper()
-
-            html_issues_list_source = scraper_2.get(article_issue_list_source_url).text
-
-            soup = BeautifulSoup(html_issues_list_source, 'lxml')
-
-            order_counter = 0
-            article_order_in_issue_count = 0
-
-            for article_order_in_issue in soup.findAll('a', class_= 'issue-item__title visitable'):
-                if any(word in article_order_in_issue.text for word in articles_we_wont_scrape):
+            else:
+                if any(word in articles.h3.text for word in articles_we_wont_scrape):
                     pass
                 else:
+                    for article_order_in_issue in articles.findAll('a', class_='issue-item__title visitable'):
+                        if any(word in article_order_in_issue.h2.text for word in articles_we_wont_scrape):
+                            pass
+                        else:
 
-                    order_counter = order_counter + 1
-
-                    if title_of_article in article_order_in_issue.text:
-
-                        article_order_in_issue_count = order_counter
-
-
-
-            print("volume is " + volume_of_article)       # Variable 4
-            print("issue is " + issue_of_article)       #Variable 5
-            count = count + 1
-
-
-
-
-            print("article order " + str(article_order_in_issue_count))  # Variable 7
-
-            print(count)
-
-            print()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                            title_of_article = article_order_in_issue.h2.text
+                            article_order_counter = article_order_counter + 1
+                            print(title_of_article) # Variable 6
+                            print(year)     # Variable 3
+                            print('volume number is ' + volume_number) # Variable 4
+                            print('issue number is ' + issue_number) # Variable 5
+                            print('order in issue is ' + str(article_order_counter)) # Variable 7
+                            print()
 
 
 
