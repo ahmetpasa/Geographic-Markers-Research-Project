@@ -39,7 +39,7 @@ class OpeningPage:
         self.master.Interval_year_label = Label(self.master, text=self.master.interval_year, justify='center', font='None 10 bold')
         self.master.Interval_year_label.grid(row=3, column=0)
 
-        self.master.Proceed_button = Button(self.master, text=self.master.proceed_text, width=8)
+        self.master.Proceed_button = Button(self.master, text=self.master.proceed_text, width=8, command = self.open_login_window)
         self.master.Proceed_button.grid(row=5, column=0, padx=10, pady=10)
 
         self.fetch_interval_year()
@@ -64,6 +64,90 @@ class OpeningPage:
             except:
                 pass
         self.master.Interval_year_label.config(text=date[1] + ' to ' + date[0])
+
+    def open_login_window(self):
+        self.newWindow = Toplevel(self.master)
+        self.app = LogInPage(self.newWindow)
+
+
+class LogInPage:
+    # class for Log In page
+    def __init__(self, master):
+        self.master = master
+        self.frame = Frame(self.master)
+
+        self.sign_in_text = 'Sign In Page'
+        self.username_label_text = 'Username'
+        self.password_label_text = 'Password'
+        self.sign_in_button_text = 'Sign In'
+        self.sign_up_button_text = 'Sign Up'
+
+        self.username_var = StringVar()
+        self.password_var = StringVar()
+
+        self.master.Sign_In_label = Label(self.master, text=self.sign_in_text, justify='center', font=('Arial Bold', 14))
+        self.master.Sign_In_label.grid(row=0, column=1, padx=10, pady=10)
+
+        self.master.Username_label = Label(self.master, text=self.username_label_text, font = 12)
+        self.master.Username_label.grid(row=1, column=0, padx=10, pady=10)
+
+        self.master.Username_Entry = Entry(self.master, textvariable = self.username_var)
+        self.master.Username_Entry.grid(row=1, column=1, padx=10, pady=10)
+
+        self.master.Password_label = Label(self.master, text=self.password_label_text, font=12)
+        self.master.Password_label.grid(row=2, column=0, padx=10, pady=10)
+
+        self.master.Password_Entry = Entry(self.master, textvariable=self.password_var, show='*')
+        self.master.Password_Entry.grid(row=2, column=1, padx=10, pady=10)
+
+        self.master.Sign_In_button = Button(self.master, text=self.sign_in_button_text, width=7)
+        self.master.Sign_In_button.grid(row=3, column=1, padx=10, pady=10)
+
+        self.master.Sign_Up_button = Button(self.master, text=self.sign_up_button_text, width=7, command = self.open_signup_window)
+        self.master.Sign_Up_button.grid(row=4, column=1, padx=10, pady=10)
+
+    def open_signup_window(self):
+        # Opening the sign up page from the log in page
+        self.master.withdraw()
+        self.newWindow = Toplevel(self.master)
+        self.app = SignUpPage(self.newWindow)
+
+
+
+class SignUpPage:
+    # Class for the Sign Up page
+    def __init__(self, master):
+        self.master = master
+        self.frame = Frame(self.master)
+
+        self.sign_up_text = 'Sign Up Page'
+        self.username_label_text = 'Username'
+        self.password_label_text = 'Password'
+        self.sign_up_button_text = 'Sign Up'
+
+        self.username_var = StringVar()
+        self.password_var = StringVar()
+
+        self.master.Sign_Up_label = Label(self.master, text=self.sign_up_text, justify='center', font=('Arial Bold', 14))
+        self.master.Sign_Up_label.grid(row=0, column=1, padx=10, pady=10)
+
+        self.master.Username_label = Label(self.master, text=self.username_label_text, font = 12)
+        self.master.Username_label.grid(row=1, column=0, padx=10, pady=10)
+
+        self.master.Username_Entry = Entry(self.master, textvariable = self.username_var)
+        self.master.Username_Entry.grid(row=1, column=1, padx=10, pady=10)
+
+        self.master.Password_label = Label(self.master, text=self.password_label_text, font=12)
+        self.master.Password_label.grid(row=2, column=0, padx=10, pady=10)
+
+        self.master.Password_Entry = Entry(self.master, textvariable=self.password_var, show='*')
+        self.master.Password_Entry.grid(row=2, column=1, padx=10, pady=10)
+
+        self.master.Sign_Up_button = Button(self.master, text=self.sign_up_button_text, width=7)
+        self.master.Sign_Up_button.grid(row=3, column=1, padx=10, pady=10)
+
+
+
 
 
 def main():
