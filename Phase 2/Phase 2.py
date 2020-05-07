@@ -1,8 +1,28 @@
 from tkinter import *
 from tkinter import messagebox
+import MySQLdb
 import cfscrape
 from bs4 import BeautifulSoup
-import db.db
+
+class DatabaseConnector:
+    # connecting to mysql
+    def __init__(self):
+        self.host = "sql7.freesqldatabase.com"
+        self.port = 3306
+        self.name = "sql7338613"
+        self.user = "sql7338613"
+        self.password = "a8jjmKwfqU"
+        self.conn = None
+
+    def get_conn(self):
+        if self.conn is None:
+            self.conn = MySQLdb.connect(host = self.host,
+                                    port = self.port,
+                                    db = self.name,
+                                    user = self.user,
+                                    passwd = self.password)
+        return self.conn
+
 
 
 class OpeningPage:
@@ -28,25 +48,26 @@ class OpeningPage:
 
         self.frame = Frame(self.master)
 
-
         self.master.Logo_label = Label(self.master, image=self.master.logo)
         self.master.Logo_label.grid(row=0, column=0)
 
-        self.master.Explanation_label = Label(self.master, text=self.master.explanation_text, justify='center', font='None 10')
+        self.master.Explanation_label = Label(self.master, text=self.master.explanation_text, justify='center',
+                                              font='None 10')
         self.master.Explanation_label.grid(row=1, column=0)
 
-        self.master.Interval_year_label_text = Label(self.master, text=self.master.interval_year_text, justify='center', font='None 10 bold')
+        self.master.Interval_year_label_text = Label(self.master, text=self.master.interval_year_text, justify='center',
+                                                     font='None 10 bold')
         self.master.Interval_year_label_text.grid(row=2, column=0)
 
-        self.master.Interval_year_label = Label(self.master, text=self.master.interval_year, justify='center', font='None 10 bold')
+        self.master.Interval_year_label = Label(self.master, text=self.master.interval_year, justify='center',
+                                                font='None 10 bold')
         self.master.Interval_year_label.grid(row=3, column=0)
 
-        self.master.Proceed_button = Button(self.master, text=self.master.proceed_text, width=8, command = self.open_login_window)
+        self.master.Proceed_button = Button(self.master, text=self.master.proceed_text, width=8,
+                                            command=self.open_login_window)
         self.master.Proceed_button.grid(row=5, column=0, padx=10, pady=10)
 
         self.fetch_interval_year()
-
-
 
     def fetch_interval_year(self):
         # Dynamically Fetching interval year
@@ -87,13 +108,14 @@ class LogInPage:
         self.username_var = StringVar()
         self.password_var = StringVar()
 
-        self.master.Sign_In_label = Label(self.master, text=self.sign_in_text, justify='center', font=('Arial Bold', 14))
+        self.master.Sign_In_label = Label(self.master, text=self.sign_in_text, justify='center',
+                                          font=('Arial Bold', 14))
         self.master.Sign_In_label.grid(row=0, column=1, padx=10, pady=10)
 
-        self.master.Username_label = Label(self.master, text=self.username_label_text, font = 12)
+        self.master.Username_label = Label(self.master, text=self.username_label_text, font=12)
         self.master.Username_label.grid(row=1, column=0, padx=10, pady=10)
 
-        self.master.Username_Entry = Entry(self.master, textvariable = self.username_var)
+        self.master.Username_Entry = Entry(self.master, textvariable=self.username_var)
         self.master.Username_Entry.grid(row=1, column=1, padx=10, pady=10)
 
         self.master.Password_label = Label(self.master, text=self.password_label_text, font=12)
@@ -102,10 +124,11 @@ class LogInPage:
         self.master.Password_Entry = Entry(self.master, textvariable=self.password_var, show='*')
         self.master.Password_Entry.grid(row=2, column=1, padx=10, pady=10)
 
-        self.master.Sign_In_button = Button(self.master, text=self.sign_in_button_text, width=7, command = self.login)
+        self.master.Sign_In_button = Button(self.master, text=self.sign_in_button_text, width=7, command=self.login)
         self.master.Sign_In_button.grid(row=3, column=1, padx=10, pady=10)
 
-        self.master.Sign_Up_button = Button(self.master, text=self.sign_up_button_text, width=7, command = self.open_signup_window)
+        self.master.Sign_Up_button = Button(self.master, text=self.sign_up_button_text, width=7,
+                                            command=self.open_signup_window)
         self.master.Sign_Up_button.grid(row=4, column=1, padx=10, pady=10)
 
     def open_signup_window(self):
@@ -113,23 +136,32 @@ class LogInPage:
         self.master.withdraw()
         self.newWindow = Toplevel(self.master)
         self.app = SignUpPage(self.newWindow)
+
     def login(self):
-        #getting the values
+        # getting the values
         data = (
             self.username_var.get(),
             self.password_var.get()
         )
         if self.username_var.get() == "":
-            messagebox.showinfo("Alert!", "You must insert username first!")
+            self.messagebox.showinfo("Alert!", "You must insert username first!")
         elif self.password_var.get() == "":
-            messagebox.showinfo("Alert!", "You must insert password first!")
+            self.messagebox.showinfo("Alert!", "You must insert password first!")
         else:
-            res = db.db.user_login(data)
-            if res:
+
+
+            self.database_connection = DatabaseConnector().get_conn()
+            self.cursor = self.database_connection.cursor()
+
+            try:
+                self.cursor.execute("SELECT * FROM user_login_info WHERE username=%s AND password=%s", data)
+                self.result = self.cursor.fetchone()
+            except:
+                self.result = False
+            if self.result:
                 messagebox.showinfo("Message", "You logged in successfully!")
             else:
                 messagebox.showinfo("Alert", "Wrong username or password!")
-
 
 
 class SignUpPage:
@@ -146,13 +178,14 @@ class SignUpPage:
         self.username_var2 = StringVar()
         self.password_var2 = StringVar()
 
-        self.master.Sign_Up_label = Label(self.master, text=self.sign_up_text, justify='center', font=('Arial Bold', 14))
+        self.master.Sign_Up_label = Label(self.master, text=self.sign_up_text, justify='center',
+                                          font=('Arial Bold', 14))
         self.master.Sign_Up_label.grid(row=0, column=1, padx=10, pady=10)
 
-        self.master.Username_label = Label(self.master, text=self.username_label_text, font = 12)
+        self.master.Username_label = Label(self.master, text=self.username_label_text, font=12)
         self.master.Username_label.grid(row=1, column=0, padx=10, pady=10)
 
-        self.master.Username_Entry = Entry(self.master, textvariable = self.username_var2)
+        self.master.Username_Entry = Entry(self.master, textvariable=self.username_var2)
         self.master.Username_Entry.grid(row=1, column=1, padx=10, pady=10)
 
         self.master.Password_label = Label(self.master, text=self.password_label_text, font=12)
@@ -163,25 +196,49 @@ class SignUpPage:
 
         self.master.Sign_Up_button = Button(self.master, text=self.sign_up_button_text, width=7, command=self.signup)
         self.master.Sign_Up_button.grid(row=3, column=1, padx=10, pady=10)
-        
-   def signup(self):
-        #function for taking input and checks
-        data = (
-            self.username_var2.get(),
-            self.password_var2.get()
-        )
+
+
+    def signup(self):
+        # function for taking input and checks
+
+        self.username = self.username_var2.get()
+        self.password = self.password_var2.get()
+        values = (self.username, self.password)
+
         data2 = self.username_var2.get()
         if self.username_var2.get() == "":
             messagebox.showinfo("Alert!", "You must enter a username first!")
         elif self.password_var2.get() == "":
             messagebox.showinfo("Alert!", "You must enter a password first!")
         else:
-            check = db.db.user_check(data2)
-            if check:
+            self.database_connection = DatabaseConnector().get_conn()
+            self.cursor = self.database_connection.cursor()
+
+            try:
+
+                query = "SELECT * FROM user_login_info WHERE username=%(username)s"
+                self.cursor.execute(query, {'username': self.username})
+                self.check = self.cursor.fetchone()
+            except:
+                self.check= False
+
+            if self.check:
                 messagebox.showinfo("Alert", "Already have a user with this username!")
             else:
-                db.db.user_signup(data)
+
+                try:
+                    self.cursor.execute("INSERT INTO user_login_info (username, password) VALUES (%s, %s)", values)
+                    self.database_connection.commit()
+
+                except:
+                    self.database_connection.rollback()
                 messagebox.showinfo("Message", "You signed up successfully!")
+
+                self.master.withdraw()
+                self.newWindow = Toplevel(self.master)
+                self.app = LogInPage(self.newWindow)
+
+
 
 
 def main():
@@ -189,9 +246,7 @@ def main():
     window = Tk()
     app = OpeningPage(window)
     window.mainloop()
+
+
 if __name__ == '__main__':
     main()
-
-
-
-
