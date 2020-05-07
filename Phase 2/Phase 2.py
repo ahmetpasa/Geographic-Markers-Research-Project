@@ -1,6 +1,8 @@
 from tkinter import *
+from tkinter import messagebox
 import cfscrape
 from bs4 import BeautifulSoup
+import db.db
 
 
 class OpeningPage:
@@ -100,7 +102,7 @@ class LogInPage:
         self.master.Password_Entry = Entry(self.master, textvariable=self.password_var, show='*')
         self.master.Password_Entry.grid(row=2, column=1, padx=10, pady=10)
 
-        self.master.Sign_In_button = Button(self.master, text=self.sign_in_button_text, width=7)
+        self.master.Sign_In_button = Button(self.master, text=self.sign_in_button_text, width=7, command = self.login)
         self.master.Sign_In_button.grid(row=3, column=1, padx=10, pady=10)
 
         self.master.Sign_Up_button = Button(self.master, text=self.sign_up_button_text, width=7, command = self.open_signup_window)
@@ -111,6 +113,22 @@ class LogInPage:
         self.master.withdraw()
         self.newWindow = Toplevel(self.master)
         self.app = SignUpPage(self.newWindow)
+    def login(self):
+        #getting the values
+        data = (
+            self.username_var.get(),
+            self.password_var.get()
+        )
+        if self.username_var.get() == "":
+            messagebox.showinfo("Alert!", "You must insert username first!")
+        elif self.password_var.get() == "":
+            messagebox.showinfo("Alert!", "You must insert password first!")
+        else:
+            res = db.db.user_login(data)
+            if res:
+                messagebox.showinfo("Message", "You logged in successfully!")
+            else:
+                messagebox.showinfo("Alert", "Wrong username or password!")
 
 
 
@@ -125,8 +143,8 @@ class SignUpPage:
         self.password_label_text = 'Password'
         self.sign_up_button_text = 'Sign Up'
 
-        self.username_var = StringVar()
-        self.password_var = StringVar()
+        self.username_var2 = StringVar()
+        self.password_var2 = StringVar()
 
         self.master.Sign_Up_label = Label(self.master, text=self.sign_up_text, justify='center', font=('Arial Bold', 14))
         self.master.Sign_Up_label.grid(row=0, column=1, padx=10, pady=10)
@@ -134,20 +152,36 @@ class SignUpPage:
         self.master.Username_label = Label(self.master, text=self.username_label_text, font = 12)
         self.master.Username_label.grid(row=1, column=0, padx=10, pady=10)
 
-        self.master.Username_Entry = Entry(self.master, textvariable = self.username_var)
+        self.master.Username_Entry = Entry(self.master, textvariable = self.username_var2)
         self.master.Username_Entry.grid(row=1, column=1, padx=10, pady=10)
 
         self.master.Password_label = Label(self.master, text=self.password_label_text, font=12)
         self.master.Password_label.grid(row=2, column=0, padx=10, pady=10)
 
-        self.master.Password_Entry = Entry(self.master, textvariable=self.password_var, show='*')
+        self.master.Password_Entry = Entry(self.master, textvariable=self.password_var2, show='*')
         self.master.Password_Entry.grid(row=2, column=1, padx=10, pady=10)
 
-        self.master.Sign_Up_button = Button(self.master, text=self.sign_up_button_text, width=7)
+        self.master.Sign_Up_button = Button(self.master, text=self.sign_up_button_text, width=7, command=self.signup)
         self.master.Sign_Up_button.grid(row=3, column=1, padx=10, pady=10)
-
-
-
+        
+   def signup(self):
+        #function for taking input and checks
+        data = (
+            self.username_var2.get(),
+            self.password_var2.get()
+        )
+        data2 = self.username_var2.get()
+        if self.username_var2.get() == "":
+            messagebox.showinfo("Alert!", "You must enter a username first!")
+        elif self.password_var2.get() == "":
+            messagebox.showinfo("Alert!", "You must enter a password first!")
+        else:
+            check = db.db.user_check(data2)
+            if check:
+                messagebox.showinfo("Alert", "Already have a user with this username!")
+            else:
+                db.db.user_signup(data)
+                messagebox.showinfo("Message", "You signed up successfully!")
 
 
 def main():
