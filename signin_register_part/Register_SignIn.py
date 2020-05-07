@@ -103,10 +103,7 @@ def registerOnFile():
     file.write(username.get() + "\n")
     file.write(password.get() + "\n")
     file.close()
-    
-    #username_entry.delete(0, END) # these two codes are not worked
-    #password_entry.delete(0, END)
-    
+       
     c = Label(screen1, text = "Registration process is successfully\ncompleted", fg="green", font = ("Arial", 10))
     c.pack()
     
@@ -168,10 +165,7 @@ def main_screen():
     
     Label(screen, text="Geographic Markers \nResearch Project", bg="grey", height="2", width = "25",  font=("Arial", 11)).pack()
     
-    """
-    # I can not upload the image
-    
-    """
+  
     Label(screen, text = "\n").pack()
     
     
