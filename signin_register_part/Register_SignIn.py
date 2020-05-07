@@ -31,10 +31,7 @@ def successful_entrance():
 def login_check():
     a= username_login.get()
     b = password_login.get()
-    
-    #a.delete(0, END)
-    #b.delete(0, END)
-    
+       
     list_of_files = os.listdir()  
     
     if a in list_of_files:
@@ -113,14 +110,7 @@ def register():
     screen1 = Toplevel(screen)
     screen1.title("Register")
     screen1.geometry("300x250")
-    
-    """
-    # I cannot put the image screen1 
-    photo3 = PhotoImage(file='login.png') 
-    photo1 = Label(screen1, image=photo3, bg='white')
-    photo1.pack()
-    """
-    
+     
     
     global username
     global password
