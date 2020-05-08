@@ -596,5 +596,8 @@ def main():
     window = Tk()
     app = OpeningPage(window)
     window.mainloop()
+    
+if __name__ == '__main__':
+    main()
 
 
