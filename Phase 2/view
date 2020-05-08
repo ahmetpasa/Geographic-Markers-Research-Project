@@ -1,0 +1,63 @@
+from tkinter import *
+
+if __name__ == "__main__":
+
+    root = Tk()
+    CheckVar  = IntVar()
+    root.title('Geographical interface')
+
+    Box1 = LabelFrame(root, text=" Browse ")
+    Box1.grid(row=3, columnspan=15, sticky='W',padx=5, pady=5, ipadx=5, ipady=5)
+
+    BrowseByVariable = Label(Box1, text="Browse by variable:")
+    BrowseByVariable.grid(row=3, column=0, sticky='E', padx=5, pady=2)
+
+    BrowseByVariable = Entry(Box1, width = 40)
+    BrowseByVariable.grid(row=3, column=1, columnspan=7, sticky="WE", pady=2)
+
+    Box2 = LabelFrame(root, text=" Queries ")
+    Box2.grid(row=0, column=17, columnspan=2, rowspan=2, sticky='NS', padx=5, pady=5)
+
+    Queries = Button(Box2, text="Recently Executed Queries")
+    Queries.grid(row=0,padx=5, pady=5)
+
+    Box3 = LabelFrame(root, text=" Basic Codebook Variables: ")
+    Box3.grid(row=3, column=17, columnspan=3, sticky='W', padx=5, pady=5, ipadx=5, ipady=5)
+
+    Variable1 = Checkbutton(Box3,text="Journal title", variable = CheckVar, state='disabled')
+    Variable1.select()
+    Variable1.grid(row=3, column=17, sticky='W', padx=5, pady=2)
+
+    Variable2 = Checkbutton(Box3,text="Geographic Coverage of Journal", variable = CheckVar, state='disabled')
+    Variable2.select()
+    Variable2.grid(row=4, column=17, sticky='W', padx=5)
+
+    Variable3 = Checkbutton(Box3,text="Year", variable = CheckVar, state='disabled')
+    Variable3.select()
+    Variable3.grid(row=5, column=17, sticky='W', padx=5)
+
+    Variable4 = Checkbutton(Box3,text="Volume", variable = CheckVar, state='disabled')
+    Variable4.select()
+    Variable4.grid(row=6, column=17, sticky='W', padx=5)
+    
+    Variable5 = Checkbutton(Box3,text="Issue", variable = CheckVar, state='disabled')
+    Variable5.select()
+    Variable5.grid(row=7, column=17, sticky='W', padx=5)
+
+    Variable6 = Checkbutton(Box3,text="Title of article", variable = CheckVar, state='disabled')
+    Variable6.select()
+    Variable6.grid(row=8, column=17, sticky='W', padx=5)
+
+    Variable7 = Checkbutton(Box3,text="Article’s order in issue ", variable = CheckVar, state='disabled')
+    Variable7.select()
+    Variable7.grid(row=9, column=17, sticky='W', padx=5)
+
+    Box4 = LabelFrame(root, text=" Donwload ")
+    Box4.grid(row=10, column=17, columnspan=3, sticky='W', padx=5, pady=5)
+    DownloadButton = Button(Box4, text="Download Excel File")
+    DownloadButton.grid(row=0,padx=5, pady=5)
+
+
+
+root.resizable(0,0)
+root.mainloop()
