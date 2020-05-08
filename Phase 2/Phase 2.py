@@ -1,8 +1,14 @@
+import codecs
+import csv
 from tkinter import *
 from tkinter import messagebox
 import MySQLdb
 import cfscrape
 from bs4 import BeautifulSoup
+import pandas as pd
+import threading
+# For installing the MySQLdb library, pip would need to be updated first to 20.1
+
 
 class DatabaseConnector:
     # connecting to mysql
@@ -99,6 +105,8 @@ class LogInPage:
         self.master = master
         self.frame = Frame(self.master)
 
+        self.master.geometry("300x250")
+
         self.sign_in_text = 'Sign In Page'
         self.username_label_text = 'Username'
         self.password_label_text = 'Password'
@@ -108,8 +116,8 @@ class LogInPage:
         self.username_var = StringVar()
         self.password_var = StringVar()
 
-        self.master.Sign_In_label = Label(self.master, text=self.sign_in_text, justify='center',
-                                          font=('Arial Bold', 14))
+
+        self.master.Sign_In_label = Label(self.master, text=self.sign_in_text, justify='center',font=('Arial Bold', 14))
         self.master.Sign_In_label.grid(row=0, column=1, padx=10, pady=10)
 
         self.master.Username_label = Label(self.master, text=self.username_label_text, font=12)
@@ -131,6 +139,8 @@ class LogInPage:
                                             command=self.open_signup_window)
         self.master.Sign_Up_button.grid(row=4, column=1, padx=10, pady=10)
 
+
+
     def open_signup_window(self):
         # Opening the sign up page from the log in page
         self.master.withdraw()
@@ -139,14 +149,15 @@ class LogInPage:
 
     def login(self):
         # getting the values
+        self.username_variable_Lp = self.username_var.get()
         data = (
             self.username_var.get(),
             self.password_var.get()
         )
         if self.username_var.get() == "":
-            self.messagebox.showinfo("Alert!", "You must insert username first!")
+            messagebox.showinfo("Alert!", "You must insert username first!")
         elif self.password_var.get() == "":
-            self.messagebox.showinfo("Alert!", "You must insert password first!")
+            messagebox.showinfo("Alert!", "You must insert password first!")
         else:
 
 
@@ -159,9 +170,14 @@ class LogInPage:
             except:
                 self.result = False
             if self.result:
-                messagebox.showinfo("Message", "You logged in successfully!")
+                self.master.withdraw()
+                self.newWindow = Toplevel(self.master)
+                self.app = MainPage(self.newWindow, self.username_variable_Lp)
             else:
                 messagebox.showinfo("Alert", "Wrong username or password!")
+
+            self.database_connection.close()
+
 
 
 class SignUpPage:
@@ -169,6 +185,8 @@ class SignUpPage:
     def __init__(self, master):
         self.master = master
         self.frame = Frame(self.master)
+
+        self.master.geometry("300x250")
 
         self.sign_up_text = 'Sign Up Page'
         self.username_label_text = 'Username'
@@ -200,6 +218,7 @@ class SignUpPage:
 
     def signup(self):
         # function for taking input and checks
+
 
         self.username = self.username_var2.get()
         self.password = self.password_var2.get()
@@ -238,45 +257,339 @@ class SignUpPage:
                 self.newWindow = Toplevel(self.master)
                 self.app = LogInPage(self.newWindow)
 
+            self.database_connection.close()
 
-class PreviousQueries:
-    """ This class contains the graphical interface of Previous queries part"""
-    
-    root =Tk()
-    root.title("Previous_Queries")
-    
-    
-    
-    canvas = Canvas(root, height=600, width=700)
-    canvas.pack()
-    
-    frame = Frame(root,)
-    frame.place(relx=0, rely=0, relwidth=1, relheight=0.3)
-    
-    label = Label(frame, text="Previous Queries", font = ("Arial", 20))
-    label.place(relx=0.25, rely=0.25, relwidth=0.5, relheight=0.5)
-    
-    frame2 = Frame(root, bg='#80c1ff')
-    frame2.place(relx=0, rely=0.35, relwidth=1, relheight=0.65)
-    
-    label2 = Label(frame2, text='TEST DATA', bg='white')
-    label2.place(relx= 0.05, rely = 0.1, relwidth = 0.9, relheight=0.8)
-    
-    
-    scrollbar = Scrollbar(label2)
-    scrollbar.pack(side=RIGHT, fill=Y)
-    
-    mylist = Listbox(label2, yscrollcommand = scrollbar.set )
-    
-    for line in range(50): # IMPORTANT: this part should be changed after datas come from database 
-        mylist.insert('end', "TEST " + str(line))
-    
-    mylist.pack(fill="both", expand="yes")
-    
-    scrollbar.config( command = mylist.yview )
-    
-    root.mainloop()
-    
+
+class MainPage:
+
+    def Fetch_Articles(self, before_year, after_year):
+
+        # Fetching article code from phase 1
+
+        self.statusbar = Label(self.master, text="Fetching....", bd=1, relief=SUNKEN, anchor=W)
+        self.statusbar.grid(row=10, column=0)
+
+        self.database_connection = DatabaseConnector().get_conn()
+        self.cursor = self.database_connection.cursor()
+
+        values = (self.basic_variables,
+                  int(self.user_id),
+                  int(before_year),
+                  int(after_year))
+
+        # inserting the details of the basic variables query to the database
+        self.cursor.execute("INSERT INTO queries (basic_variables, user_id, from_year, to_year) VALUES (%s, %s, %s, %s)", values)
+        self.database_connection.commit()
+        self.database_connection.close()
+
+
+        self.before_year = before_year
+        self.after_year = after_year
+        self.british_journal_url = 'https://onlinelibrary.wiley.com/loi/14684446/year/'
+        self.articles_we_wont_scrape = ['COMMENTARY', 'Commentary', 'Commentaries', 'Review', 'Erratum', 'Corrigendum',
+                                   'REVIEW',
+                                   'Book',
+                                   'Notes to contributors', 'Editorial announcement', 'VOLUME INDEX', 'Comments',
+                                   '– By',
+                                   'Replies', 'Notes to Contributors', 'Issue Information ‐ Toc', 'Reviews', 'reviews',
+                                   'Books reviews', '– Edited by', 'Issue Information', 'Editorial',
+                                   'Issue Information ‐ TOC',
+                                   'Early View', 'Editor', 'commentators', 'Reply']
+
+        self.scraper = cfscrape.create_scraper()
+        self.scraper_2 = cfscrape.create_scraper()
+        self.html_source = self.scraper.get(self.british_journal_url).text
+        self.soup = BeautifulSoup(self.html_source, 'lxml')
+
+        self.journal_title = self.soup.find('span', 'journalTitle').text.split(',')[1].lstrip()  # Variable 1
+        self.csv_title = self.journal_title + '_' + str(before_year) + '_' + str(after_year)
+        self.csv_file = codecs.open(self.csv_title + '.csv', 'w', encoding='utf-8')
+        self.csv_writer = csv.writer(self.csv_file)
+        self.csv_writer.writerow(['Journal Title', 'Coverage', 'Year', 'Volume', 'Issue', 'Title of Article',
+                             'Variable 7'])  # Column names are arranged as example
+
+        if self.journal_title in 'The British Journal of Sociology':  # These codes are arranged as codebook
+            self.journal_title_code = 6  # it's not coded in codebook so we give 6
+        elif self.journal_title in 'American Sociological Review':
+            self.journal_title_code = 1
+        elif self.journal_title in 'New Perspectives on Turkey':
+            self.journal_title_code = 3
+        elif self.journal_title in 'European Sociological Review':
+            self.journal_title_code = 5
+        elif self.journal_title in 'Modern China':
+            self.journal_title_code = 4
+        elif self.journal_title in 'Social Science Japan Journal':
+            self.journal_title_code = 2
+
+        if self.journal_title in 'American Sociological Review' or 'British Journal of Sociology':
+            self.geographic_coverage = 2
+        elif self.journal_title in 'Gender Society' or 'Social Forces':
+            self.geographic_coverage = 1
+        elif self.journal_title in 'European Sociological Review':
+            self.geographic_coverage = 3
+        elif self.journal_title in 'Modern China or New Perspectives on Turkey':
+            self.geographic_coverage = 4
+
+        for i in range(before_year, after_year - 1, -1):
+
+            self.html_source = self.scraper.get(self.british_journal_url + str(i)).text
+            self.soup = BeautifulSoup(self.html_source, 'lxml')
+
+            for self.journal in self.soup.findAll('li', class_='card clearfix'):
+
+                self.issue_url = 'https://onlinelibrary.wiley.com' + self.journal.find('a')['href']
+                self.issue_and_volume_info = self.journal.find('a', class_='visitable').text
+                self.issue_and_volume_info = self.issue_and_volume_info.split(" ")
+                self.volume_number = self.issue_and_volume_info[1].split(',')[0]
+                self.issue_number = self.issue_and_volume_info[3]
+                self.year = i
+
+                self.html_source_2 = self.scraper_2.get(self.issue_url).text
+                self.article_soup = BeautifulSoup(self.html_source_2, 'lxml')
+
+                self.article_order_counter = 0
+
+                for self.articles in self.article_soup.findAll('div', class_='card issue-items-container exportCitationWrapper'):
+                    if not self.articles.find('h3'):
+                        for self.article_order_in_issue in self.articles.findAll('a', class_='issue-item__title visitable'):
+                            if any(self.word in self.article_order_in_issue.h2.text for self.word in self.articles_we_wont_scrape):
+                                pass
+                            else:
+                                self.article_order_counter = self.article_order_counter + 1
+
+                                self.title_of_article = self.article_order_in_issue.h2.text
+
+                                self.csv_writer.writerow(
+                                    [self.journal_title_code, self.geographic_coverage, self.year, self.volume_number, str(self.issue_number),
+                                     self.title_of_article, str(self.article_order_counter)])
+
+                    else:
+                        if any(self.word in self.articles.h3.text for self.word in self.articles_we_wont_scrape):
+                            pass
+                        else:
+                            for self.article_order_in_issue in self.articles.findAll('a', class_='issue-item__title visitable'):
+                                if any(self.word in self.article_order_in_issue.h2.text for self.word in self.articles_we_wont_scrape):
+                                    pass
+                                else:
+
+                                    self.title_of_article = self.article_order_in_issue.h2.text
+                                    self.article_order_counter = self.article_order_counter + 1
+
+                                    self.csv_writer.writerow([self.journal_title_code, self.geographic_coverage, self.year, self.volume_number,
+                                                         str(self.issue_number),
+                                                         self.title_of_article, str(self.article_order_counter)])
+        self.csv_file.close()
+        self.read_file = pd.read_csv(self.csv_title + '.csv')
+        self.read_file.to_excel(self.csv_title + '_excel_format_' + '.xlsx', index=None,
+                           header=True)  # Formatting the CSV to XLSX(Excel Table)
+
+        self.statusbar.destroy()
+        messagebox.showinfo('Confirmation', 'Articles Fetched and Saved')
+
+        self.DownloadButton.config(state="disabled")
+
+
+    # ALLOWING DIGIS ONLY
+    def testVal(self, inStr, acttyp):
+        if acttyp == '1':  # insert
+            if not inStr.isdigit():
+                return False
+        return True
+
+    def clicked(self):
+        global list_data
+        list_data = []
+        self.listbox.insert(END, self.content.get())
+        list_data.append(self.content.get())
+
+    def delete_selected(self):
+        global list_data
+        selected = self.listbox.get(self.listbox.curselection())
+        self.listbox.delete(ANCHOR)
+        list_data.pop(list_data.index(selected))
+
+    def __init__(self, master, username):
+
+        self.username_variable = username
+
+        self.database_connection = DatabaseConnector().get_conn()
+        self.cursor = self.database_connection.cursor()
+
+        # creating the query to get the id of the current user logged in
+
+        query = "SELECT id FROM user_login_info WHERE username=%(username)s"
+        self.cursor.execute(query, {'username': self.username_variable})
+        self.check = self.cursor.fetchone()
+
+        result_id = ' '.join([str(x) for x in self.check])
+
+        self.basic_variables = 'basic variables'
+        self.user_id = result_id[0]
+
+
+        self.database_connection.close()
+
+
+        self.CheckVar = IntVar()
+        self.master = master
+        self.frame = Frame(self.master)
+
+
+
+        # BROWSE WIDGETS
+        self.Box1 = LabelFrame(self.master, text=" Browse ")
+        self.Box1.grid(row=3, columnspan=15, sticky='W', padx=5, pady=5, ipadx=5, ipady=5)
+
+        self.BrowseByVariable = Label(self.Box1, text="Browse by variable:")
+        self.BrowseByVariable.grid(row=3, column=0, sticky='E', padx=5, pady=2)
+
+        # VariableList
+
+        self.content = StringVar()
+        self.BrowseByVariable = Entry(self.Box1, width=40, textvariable=self.content)
+        self.BrowseByVariable.grid(row=3, column=1, columnspan=7, sticky="WE", pady=2)
+
+        self.BrowseByVariable = Button(self.Box1, text="search", command=self.clicked)
+        self.BrowseByVariable.grid(row=3, column=8, sticky='W', padx=5, pady=2)
+
+        self.listbox = Listbox(self.Box1)
+        self.listbox.grid(row=4, column=1, sticky='w')
+
+        self.BrowseByVariable = Button(self.Box1, text="Remove selected variable", command=self.delete_selected)
+        self.BrowseByVariable.grid(row=5, column=1, pady=2, sticky='w')
+
+        # YEAR WIDGETS
+        self.Box4 = LabelFrame(self.master, text="Years")
+        self.Box4.grid(row=1, columnspan=9, sticky='W', padx=5, pady=5, ipadx=5, ipady=5)
+
+        self.Years = Label(self.Box4, text="From:")
+        self.Years.grid(row=1, column=0, sticky='E', padx=5, pady=2)
+
+        self.From_Years = Entry(self.Box4, validate="key")
+        self.From_Years['validatecommand'] = (self.Years.register(self.testVal), '%P', '%d')
+        self.From_Years.grid(row=1, column=1, columnspan=1, sticky="WE", pady=2)
+
+        self.Years = Label(self.Box4, text="to:")
+        self.Years.grid(row=1, column=2, padx=5, pady=2)
+
+        self.To_Years = Entry(self.Box4, validate="key")
+        self.To_Years['validatecommand'] = (self.Years.register(self.testVal), '%P', '%d')
+        self.To_Years.grid(row=1, column=3, columnspan=1, sticky="WE", pady=2)
+
+        # QUEREY WIDGETS
+        self.Box2 = LabelFrame(self.master, text=" Queries ")
+        self.Box2.grid(row=0, column=17, columnspan=2, rowspan=2, sticky='NS', padx=5, pady=5)
+
+        self.Queries = Button(self.Box2, text="Recently Executed Queries", command = self.OpenPreviousQueriesPage)
+        self.Queries.grid(row=0, padx=5, pady=5)
+
+        # PRESELECTED VARIBALES WIDGETS
+        self.Box3 = LabelFrame(self.master, text=" Basic Codebook Variables: ")
+        self.Box3.grid(row=3, column=17, columnspan=3, sticky='W', padx=5, pady=5, ipadx=5, ipady=5)
+
+        self.Variable1 = Checkbutton(self.Box3, text="Journal title", variable=self.CheckVar, state='disabled')
+        self.Variable1.select()
+        self.Variable1.grid(row=3, column=17, sticky='W', padx=5, pady=2)
+
+        self.Variable2 = Checkbutton(self.Box3, text="Geographic Coverage of Journal", variable=self.CheckVar, state='disabled')
+        self.Variable2.select()
+        self.Variable2.grid(row=4, column=17, sticky='W', padx=5)
+
+        self.Variable3 = Checkbutton(self.Box3, text="Year", variable=self.CheckVar, state='disabled')
+        self.Variable3.select()
+        self.Variable3.grid(row=5, column=17, sticky='W', padx=5)
+
+        self.Variable4 = Checkbutton(self.Box3, text="Volume", variable=self.CheckVar, state='disabled')
+        self.Variable4.select()
+        self.Variable4.grid(row=6, column=17, sticky='W', padx=5)
+
+        self.Variable5 = Checkbutton(self.Box3, text="Issue", variable=self.CheckVar, state='disabled')
+        self.Variable5.select()
+        self.Variable5.grid(row=7, column=17, sticky='W', padx=5)
+
+        self.Variable6 = Checkbutton(self.Box3, text="Title of article", variable=self.CheckVar, state='disabled')
+        self.Variable6.select()
+        self.Variable6.grid(row=8, column=17, sticky='W', padx=5)
+
+        self.Variable7 = Checkbutton(self.Box3, text="Article’s order in issue ", variable=self.CheckVar, state='disabled')
+        self.Variable7.select()
+        self.Variable7.grid(row=9, column=17, sticky='W', padx=5)
+
+        self.Box4 = LabelFrame(self.master, text=" Donwload ")
+        self.Box4.grid(row=10, column=17, columnspan=3, sticky='W', padx=5, pady=5)
+
+        self.DownloadButton = Button(self.Box4, text="Download Excel File", command=threading.Thread(
+        target=lambda: self.Fetch_Articles(int(self.From_Years.get()), int(self.To_Years.get()))).start)
+
+        self.DownloadButton.grid(row=0, padx=5, pady=5)
+
+    def OpenPreviousQueriesPage(self):
+        self.master.withdraw()
+        self.newWindow = Toplevel(self.master)
+        self.app = PreviousQueriesPage(self.newWindow, self.user_id)
+
+class PreviousQueriesPage:
+    # Previous Queries Page
+
+    def __init__(self, master, user_id):
+        self.master = master
+        self.frame = Frame(self.master)
+
+        self.users_id = user_id
+
+
+        self.canvas = Canvas(self.master, height=600, width=400)
+        self.canvas.pack()
+
+        self.frame = Frame(self.master)
+        self.frame.place(relx=0, rely=0, relwidth=1, relheight=0.3)
+
+        self.label = Label(self.frame, text="Previous Queries", font=("Arial", 18))
+        self.label.place(relx=0.25, rely=0.20, relwidth=0.5, relheight=0.5)
+
+        self.frame2 = Frame(self.master, bg='light grey')
+        self.frame2.place(rely=0.25, relwidth=1, relheight=0.74)
+
+        self.label2 = Label(self.frame2, text='TEST DATA', bg='white')
+        self.label2.place(relx=0.01, rely=0.01, relwidth=0.98, relheight=0.98)
+
+        self.scrollbar = Scrollbar(self.label2)
+        self.scrollbar.pack(side=RIGHT, fill=Y)
+
+        self.mylist = Listbox(self.label2, yscrollcommand=self.scrollbar.set)
+
+        self.database_connection = DatabaseConnector().get_conn()
+        self.cursor = self.database_connection.cursor()
+
+        # Retrieving previous queries information from database
+        query = "select basic_variables, variable_8, variable_9, variable_10, variable_11, variable_12, variable_13, from_year, to_year from queries where user_id =%(user_id)s"
+        self.cursor.execute(query, {'user_id': self.users_id})
+        self.check = self.cursor.fetchall()
+
+        results = []
+        count = 0
+
+        # displaying them on screen
+        if self.check:
+            for tuples in self.check:
+                single_tuples = ' '.join([str(x) for x in tuples])
+                results.append(single_tuples)
+                results[count] = results[count].replace('None', '')
+                self.mylist.insert('end', results[count])
+                count = count + 1
+        else:
+            self.mylist.insert('end', "No Available Queries")
+
+
+        self.mylist.pack(fill="both", expand="yes")
+
+        self.scrollbar.config(command=self.mylist.yview)
+
+
+
+
+
+
 
 def main():
     # main method
