@@ -41,8 +41,8 @@ class OpeningPage:
 
         self.master.logo = PhotoImage(file='Journal logo.gif')
 
-        self.master.explanation_text = '''Geographic Markers Research Project is a project led by Dr. Murat Ergin, Sevil Togay, and another
-        assistant from the Comparative History and Society department at Koç University. The main 
+        self.master.explanation_text = '''Geographic Markers Research Project is a project led by Dr. Murat Ergin, Sevil Togay, and Didar 
+        Tutan from the Comparative History and Society department at Koç University. The main 
         aim is uncovering how neo-colonial power relations continue to operate on academic 
         writing practices of various scholars across the world'''
 
@@ -415,6 +415,8 @@ class MainPage:
         self.database_connection = DatabaseConnector().get_conn()
         self.cursor = self.database_connection.cursor()
 
+
+
         # creating the query to get the id of the current user logged in
 
         query = "SELECT id FROM user_login_info WHERE username=%(username)s"
@@ -424,6 +426,7 @@ class MainPage:
         result_id = ' '.join([str(x) for x in self.check])
 
         self.basic_variables = 'basic variables'
+
         self.user_id = result_id
 
 
@@ -593,6 +596,7 @@ class PreviousQueriesPage:
         self.frame = Frame(self.master)
 
         self.users_id = user_id
+
 
 
         self.canvas = Canvas(self.master, height=600, width=400)
