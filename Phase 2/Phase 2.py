@@ -424,7 +424,7 @@ class MainPage:
         result_id = ' '.join([str(x) for x in self.check])
 
         self.basic_variables = 'basic variables'
-        self.user_id = result_id[0]
+        self.user_id = result_id
 
 
         self.database_connection.close()
