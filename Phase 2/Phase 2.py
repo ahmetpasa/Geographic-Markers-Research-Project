@@ -449,7 +449,7 @@ class MainPage:
         self.BrowseByVariable = Entry(self.Box1, width=40, textvariable=self.content)
         self.BrowseByVariable.grid(row=3, column=1, columnspan=7, sticky="WE", pady=2)
 
-        self.BrowseByVariable = Button(self.Box1, text="search", command=self.clicked)
+        self.BrowseByVariable = Button(self.Box1, text="Select", command=self.clicked)
         self.BrowseByVariable.grid(row=3, column=8, sticky='W', padx=5, pady=2)
 
         self.listbox = Listbox(self.Box1)
@@ -487,33 +487,48 @@ class MainPage:
         self.Box3 = LabelFrame(self.master, text=" Basic Codebook Variables: ")
         self.Box3.grid(row=3, column=17, columnspan=3, sticky='W', padx=5, pady=5, ipadx=5, ipady=5)
 
-        self.Variable1 = Checkbutton(self.Box3, text="Journal title", variable=self.CheckVar, state='disabled')
+        self.Variable1 = Checkbutton(self.Box3, text="Variable 1", variable=self.CheckVar, state='disabled')
         self.Variable1.select()
         self.Variable1.grid(row=3, column=17, sticky='W', padx=5, pady=2)
+        self.Variable1.bind("<Enter>", self.on_enter_variable_1)
+        self.Variable1.bind("<Leave>", self.on_leave_variable_1)
 
-        self.Variable2 = Checkbutton(self.Box3, text="Geographic Coverage of Journal", variable=self.CheckVar, state='disabled')
+
+        self.Variable2 = Checkbutton(self.Box3, text="Variable 2", variable=self.CheckVar, state='disabled')
         self.Variable2.select()
         self.Variable2.grid(row=4, column=17, sticky='W', padx=5)
+        self.Variable2.bind("<Enter>", self.on_enter_variable_2)
+        self.Variable2.bind("<Leave>", self.on_leave_variable_2)
 
-        self.Variable3 = Checkbutton(self.Box3, text="Year", variable=self.CheckVar, state='disabled')
+        self.Variable3 = Checkbutton(self.Box3, text="Variable 3", variable=self.CheckVar, state='disabled')
         self.Variable3.select()
         self.Variable3.grid(row=5, column=17, sticky='W', padx=5)
+        self.Variable3.bind("<Enter>", self.on_enter_variable_3)
+        self.Variable3.bind("<Leave>", self.on_leave_variable_3)
 
-        self.Variable4 = Checkbutton(self.Box3, text="Volume", variable=self.CheckVar, state='disabled')
+        self.Variable4 = Checkbutton(self.Box3, text="Variable 4", variable=self.CheckVar, state='disabled')
         self.Variable4.select()
         self.Variable4.grid(row=6, column=17, sticky='W', padx=5)
+        self.Variable4.bind("<Enter>", self.on_enter_variable_4)
+        self.Variable4.bind("<Leave>", self.on_leave_variable_4)
 
-        self.Variable5 = Checkbutton(self.Box3, text="Issue", variable=self.CheckVar, state='disabled')
+        self.Variable5 = Checkbutton(self.Box3, text="Variable 5", variable=self.CheckVar, state='disabled')
         self.Variable5.select()
         self.Variable5.grid(row=7, column=17, sticky='W', padx=5)
+        self.Variable5.bind("<Enter>", self.on_enter_variable_5)
+        self.Variable5.bind("<Leave>", self.on_leave_variable_5)
 
-        self.Variable6 = Checkbutton(self.Box3, text="Title of article", variable=self.CheckVar, state='disabled')
+        self.Variable6 = Checkbutton(self.Box3, text="Variable 6", variable=self.CheckVar, state='disabled')
         self.Variable6.select()
         self.Variable6.grid(row=8, column=17, sticky='W', padx=5)
+        self.Variable6.bind("<Enter>", self.on_enter_variable_6)
+        self.Variable6.bind("<Leave>", self.on_leave_variable_6)
 
-        self.Variable7 = Checkbutton(self.Box3, text="Article’s order in issue ", variable=self.CheckVar, state='disabled')
+        self.Variable7 = Checkbutton(self.Box3, text="Variable 7", variable=self.CheckVar, state='disabled')
         self.Variable7.select()
         self.Variable7.grid(row=9, column=17, sticky='W', padx=5)
+        self.Variable7.bind("<Enter>", self.on_enter_variable_7)
+        self.Variable7.bind("<Leave>", self.on_leave_variable_7)
 
         self.Box4 = LabelFrame(self.master, text=" Donwload ")
         self.Box4.grid(row=10, column=17, columnspan=3, sticky='W', padx=5, pady=5)
@@ -527,6 +542,48 @@ class MainPage:
         self.master.withdraw()
         self.newWindow = Toplevel(self.master)
         self.app = PreviousQueriesPage(self.newWindow, self.user_id)
+
+    def on_enter_variable_1(self, event):
+        self.Variable1.configure(text="Journal Title")
+
+    def on_leave_variable_1(self, enter):
+        self.Variable1.configure(text="Variable 1")
+
+    def on_enter_variable_2(self, event):
+        self.Variable2.configure(text="Geographic Coverage of Journal")
+
+    def on_leave_variable_2(self, enter):
+        self.Variable2.configure(text="Variable 2")
+
+    def on_enter_variable_3(self, event):
+        self.Variable3.configure(text="Year")
+
+    def on_leave_variable_3(self, enter):
+        self.Variable3.configure(text="Variable 3")
+
+    def on_enter_variable_4(self, event):
+        self.Variable4.configure(text="Volume")
+
+    def on_leave_variable_4(self, enter):
+        self.Variable4.configure(text="Variable 4")
+
+    def on_enter_variable_5(self, event):
+        self.Variable5.configure(text="Issue")
+
+    def on_leave_variable_5(self, enter):
+        self.Variable5.configure(text="Variable 5")
+
+    def on_enter_variable_6(self, event):
+        self.Variable6.configure(text="Title of article")
+
+    def on_leave_variable_6(self, enter):
+        self.Variable6.configure(text="Variable 6")
+
+    def on_enter_variable_7(self, event):
+        self.Variable7.configure(text="Article’s order in issue ")
+
+    def on_leave_variable_7(self, enter):
+        self.Variable7.configure(text="Variable 7")
 
 class PreviousQueriesPage:
     # Previous Queries Page
@@ -596,8 +653,6 @@ def main():
     window = Tk()
     app = OpeningPage(window)
     window.mainloop()
-    
+
 if __name__ == '__main__':
     main()
-
-
