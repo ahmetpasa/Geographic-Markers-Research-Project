@@ -2,27 +2,28 @@ import codecs
 import csv
 from tkinter import *
 from tkinter import messagebox
-import MySQLdb
+import pymysql
 import cfscrape
 from bs4 import BeautifulSoup
 import pandas as pd
 import threading
-# For installing the MySQLdb library, pip would need to be updated first to 20.1
+# mysqldb connector changed due to its problematic nature, pymysql is now used
 
 
 class DatabaseConnector:
     # connecting to mysql
+    # new online database hoster used for better performance
     def __init__(self):
-        self.host = "sql7.freesqldatabase.com"
+        self.host = "remotemysql.com"
         self.port = 3306
-        self.name = "sql7338613"
-        self.user = "sql7338613"
-        self.password = "a8jjmKwfqU"
+        self.name = "0nuRjoWBcJ"
+        self.user = "0nuRjoWBcJ"
+        self.password = "kM1idJBY20"
         self.conn = None
 
     def get_conn(self):
         if self.conn is None:
-            self.conn = MySQLdb.connect(host = self.host,
+            self.conn = pymysql.connect(host = self.host,
                                     port = self.port,
                                     db = self.name,
                                     user = self.user,
@@ -177,6 +178,7 @@ class LogInPage:
                 messagebox.showinfo("Alert", "Wrong username or password!")
 
             self.database_connection.close()
+            self.cursor.close()
 
 
 
@@ -257,7 +259,10 @@ class SignUpPage:
                 self.newWindow = Toplevel(self.master)
                 self.app = LogInPage(self.newWindow)
 
+
+
             self.database_connection.close()
+            self.cursor.close()
 
 
 class MainPage:
@@ -281,6 +286,7 @@ class MainPage:
         self.cursor.execute("INSERT INTO queries (basic_variables, user_id, from_year, to_year) VALUES (%s, %s, %s, %s)", values)
         self.database_connection.commit()
         self.database_connection.close()
+        self.cursor.close()
 
 
         self.before_year = before_year
@@ -431,6 +437,7 @@ class MainPage:
 
 
         self.database_connection.close()
+        self.cursor.close()
 
 
         self.CheckVar = IntVar()
@@ -645,6 +652,9 @@ class PreviousQueriesPage:
         self.mylist.pack(fill="both", expand="yes")
 
         self.scrollbar.config(command=self.mylist.yview)
+
+        self.database_connection.close()
+        self.cursor.close()
 
 
 
