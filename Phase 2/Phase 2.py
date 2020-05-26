@@ -269,6 +269,173 @@ class SignUpPage:
 
 class MainPage:
     
+    def Fetch_Variable_8(self, active, before_year, after_year):
+        # Fetching variable 8
+
+        # Values to be inserted into the file are stored here
+        self.variable_8 = []
+
+        # Defining the geographic coverage
+        self.geography_coverage = ['UK', 'United Kingdom', 'England', 'Britain']
+
+        self.file = self.csv_title + '.csv'
+
+        self.update_index = 0
+
+        self.update_file = pd.read_csv(self.file)
+
+        # Defining the supranationals
+
+        self.supranationals = ['EU', 'European Union', 'NATO', 'North Atlantic Treaty Organization',
+                               'North American Free Trade Agreement', 'NAFTA', 'UN',
+                               'United Nations', 'Arab League', 'OECD',
+                               'Organisation for Economic Co-operation and Development', 'OPEC', 'Islamic Cooperation',
+                               'ASEAN', 'Association of Southeast Asian Nations', 'SAARC',
+                               'South Asian Association for Regional Cooperation', 'African Union']
+
+        if active is True:
+            self.database_connection = DatabaseConnector().get_conn()
+            self.cursor = self.database_connection.cursor()
+
+            self.query = 'SELECT MAX(id) FROM queries'
+            self.cursor.execute(self.query)
+            self.max_id = self.cursor.fetchone()
+
+            self.query = 'UPDATE queries SET variable_8 = %s WHERE id = %s'
+            self.values = ("variable 8", self.max_id[0])
+            self.cursor.execute(self.query, self.values)
+
+            self.database_connection.commit()
+            self.database_connection.close()
+            self.cursor.close()
+
+            for i in range(before_year, after_year - 1, -1):
+
+                self.html_source = self.scraper.get(self.british_journal_url + str(i)).text
+                self.soup = BeautifulSoup(self.html_source, 'lxml')
+
+                for self.journal in self.soup.findAll('li', class_='card clearfix'):
+
+                    self.issue_url = 'https://onlinelibrary.wiley.com' + self.journal.find('a')['href']
+                    self.issue_and_volume_info = self.journal.find('a', class_='visitable').text
+
+                    self.html_source_2 = self.scraper_2.get(self.issue_url).text
+                    self.article_soup = BeautifulSoup(self.html_source_2, 'lxml')
+
+                    for self.articles in self.article_soup.findAll('div',
+                                                                   class_='card issue-items-container exportCitationWrapper'):
+                        if not self.articles.find('h3'):
+                            for self.article_order_in_issue in self.articles.findAll('a',
+                                                                                     class_='issue-item__title visitable'):
+                                if any(self.word in self.article_order_in_issue.h2.text for self.word in
+                                       self.articles_we_wont_scrape):
+                                    pass
+                                else:
+
+                                    try:
+                                        self.abstract_scrape = self.article_order_in_issue.find_next_sibling('div',
+                                                                                                             class_='content-item-format-links')
+
+                                        self.abstract_scrape_2 = self.abstract_scrape.find('a', title='Abstract')[
+                                            'href']
+                                        self.title_of_article = self.article_order_in_issue.h2.text
+
+                                        self.places = geograpy.get_place_context(text=self.title_of_article)
+
+                                        # Defining the conditions for coding
+
+                                        if len(self.places.country_mentions) > 0 and self.places.country_mentions[0][
+                                            0] in self.supranationals:
+                                            self.variable_8.append('7')
+                                        elif len(self.places.country_mentions) == 1:
+                                            if self.places.country_mentions[0][0] in self.geography_coverage:
+                                                self.variable_8.append('3')
+                                            else:
+                                                self.variable_8.append('4')
+                                        elif len(self.places.country_mentions) < 3 and (
+                                                len(self.places.city_mentions) > 0 or len(
+                                                self.places.region_mentions) > 0):
+                                            if len(self.places.city_mentions) == 1 or len(
+                                                    self.places.region_mentions) == 1:
+                                                self.variable_8.append('1')
+                                            else:
+                                                self.variable_8.append('2')
+                                        elif len(self.places.country_mentions) >= 3:
+                                            self.variable_8.append('5')
+                                        elif len(self.places.country_mentions) == 0 and len(
+                                                self.places.city_mentions) == 0 and len(
+                                            self.places.region_mentions) == 0:
+                                            self.variable_8.append('0')
+                                        else:
+                                            self.variable_8.append('6')
+                                    except:
+                                        pass
+
+                        else:
+                            if any(self.word in self.articles.h3.text for self.word in self.articles_we_wont_scrape):
+                                pass
+                            else:
+                                for self.article_order_in_issue in self.articles.findAll('a',
+                                                                                         class_='issue-item__title visitable'):
+                                    if any(self.word in self.article_order_in_issue.h2.text for self.word in
+                                           self.articles_we_wont_scrape):
+                                        pass
+                                    else:
+
+                                        try:
+                                            self.abstract_scrape = self.article_order_in_issue.find_next_sibling('div',
+                                                                                                                 class_='content-item-format-links')
+
+                                            self.abstract_scrape_2 = self.abstract_scrape.find('a', title='Abstract')[
+                                                'href']
+
+
+                                            self.title_of_article = self.article_order_in_issue.h2.text
+
+                                            self.places = geograpy.get_place_context(text=self.title_of_article)
+
+                                            # Defining the conditions for coding
+
+                                            if len(self.places.country_mentions) > 0 and \
+                                                    self.places.country_mentions[0][0] in self.supranationals:
+                                                self.variable_8.append('7')
+                                            elif len(self.places.country_mentions) == 1:
+                                                if self.places.country_mentions[0][0] in self.geography_coverage:
+                                                    self.variable_8.append('3')
+                                                else:
+                                                    self.variable_8.append('4')
+                                            elif len(self.places.country_mentions) < 3 and (
+                                                    len(self.places.city_mentions) > 0 or len(
+                                                    self.places.region_mentions) > 0):
+                                                if len(self.places.city_mentions) == 1 or len(
+                                                        self.places.region_mentions) == 1:
+                                                    self.variable_8.append('1')
+                                                else:
+                                                    self.variable_8.append('2')
+                                            elif len(self.places.country_mentions) >= 3:
+                                                self.variable_8.append('5')
+                                            elif len(self.places.country_mentions) == 0 and len(
+                                                    self.places.city_mentions) == 0 and len(
+                                                self.places.region_mentions) == 0:
+                                                self.variable_8.append('0')
+                                            else:
+                                                self.variable_8.append('6')
+                                        except:
+                                            pass
+
+            # Inserting the values into the file
+            self.update_file['Variable 8'] = self.variable_8
+
+            self.update_file.to_csv(self.file, index=False)
+
+            self.update_file.to_excel(self.csv_title + '_excel_format_' + '.xlsx', index=None, header=True)
+
+
+
+        else:
+            pass
+
+    
     def Fetch_Variable_9(self, active, before_year, after_year):
         self.variable_9 = [] #Values are recorded in this list
         self.file = self.csv_title + '.csv'
@@ -616,7 +783,7 @@ class MainPage:
                                             pass
             
             # Inserting the values into the file
-            self.update_file['Variable 8'] = self.variable_10
+            self.update_file['Variable 10'] = self.variable_10
 
             self.update_file.to_csv(self.file, index=False)
 
@@ -771,7 +938,7 @@ class MainPage:
         self.read_file = pd.read_csv(self.csv_title + '.csv')
         self.read_file.to_excel(self.csv_title + '_excel_format_' + '.xlsx', index=None,header=True)  # Formatting the CSV to XLSX(Excel Table)
 
-
+        self.Fetch_Variable_8(True, self.before_year, self.after_year)
         self.Fetch_Variable_9(True, self.before_year, self.after_year)
         self.Fetch_Variable_10(True, self.before_year, self.after_year)
         self.Fetch_Variable_13(True)
