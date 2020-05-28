@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import threading
 import geograpy
+import universities
 
 
 # new library for defining geography
@@ -1036,6 +1037,150 @@ class MainPage:
         else:
             pass
 
+    def Fetch_Variable_12(self, active, before_year, after_year):
+        self.variable_12 = []
+        self.uk = ['Lancaster University', 'University of Missouri‐St Louis',
+                   'Durham University', 'Oxford University', 'Sociology Department University of Manchester',
+                   'Ludwig‐Maximilian University and London School of Economics and Politial Science',
+                   'Department of Sociology University of Lancaster', 'London South Bank University.',
+                   'London School of Economcis and Political Science', 'Department of Sociology Lancaster University'
+                   'Darwin College University of Kent', 'Bangor University', 'Buckinghamshire Chilterns University College',
+                   'Cardiff University Business School', 'Cardiff University School of Social Sciences'
+                   'Department of Sociology University of Manchester', 'Department of Sociology University of Surrey'] # this schools are not recognized by python university library
+       
+        self.file = self.csv_title + '.csv'
+        self.update_file = pd.read_csv(self.file)
+        self.update_index = 0
+        
+        if active is True:
+            self.database_connection = DatabaseConnector().get_conn()
+            self.cursor = self.database_connection.cursor()
+
+            self.query = 'SELECT MAX(id) FROM queries WHERE user_id = %s'
+            self.values = self.user_id
+            self.cursor.execute(self.query, self.values)
+            self.max_id = self.cursor.fetchone()
+
+            self.query = 'UPDATE queries SET variable_12 = %s WHERE id = %s'
+            self.values = ("variable 12", self.max_id[0])
+            self.cursor.execute(self.query, self.values)
+
+            self.database_connection.commit()
+            self.database_connection.close()
+            self.cursor.close()
+            
+            for i in range(before_year, after_year - 1, -1):
+ 
+                 self.html_source = self.scraper.get(self.british_journal_url + str(i)).text
+                 self.soup = BeautifulSoup(self.html_source, 'lxml')
+ 
+                 for self.journal in self.soup.findAll('li', class_='card clearfix'):
+ 
+                     self.issue_url = 'https://onlinelibrary.wiley.com' + self.journal.find('a')['href']
+                     self.issue_and_volume_info = self.journal.find('a', class_='visitable').text
+ 
+ 
+                     self.html_source_2 = self.scraper_2.get(self.issue_url).text
+                     self.article_soup = BeautifulSoup(self.html_source_2, 'lxml')
+                     
+                     
+                     
+                     for self.articles in self.article_soup.findAll('div',class_='card issue-items-container exportCitationWrapper'):
+                         if not self.articles.find('h3'):
+                             for self.article_order_in_issue in self.articles.findAll('a',class_='issue-item__title visitable'):
+                                 if any(self.word in self.article_order_in_issue.h2.text for self.word in self.articles_we_wont_scrape):
+                                     pass
+                                 else:
+                                     try:
+                                         
+                                         
+                                         self.abstract_scrape = self.article_order_in_issue.find_next_sibling('div',class_='content-item-format-links')
+
+                                         self.abstract_scrape_2 = self.abstract_scrape.find('a', title='Abstract')['href']
+                                        
+                                         if (self.abstract_scrape_2):
+                                             
+                                        
+                                             self.link = self.article_order_in_issue.get('href')
+                                             
+                                             self.var12_url = 'https://onlinelibrary.wiley.com' + self.link
+                                             
+                                             variable12 = Variable12(self.var12_url) # new object is created
+                                           
+                                             if (variable12.country == None):
+                                                 
+                                                                                                                                                       
+                                                 if variable12.tempName in self.uk: 
+                    
+                                                    self.variable_12.append('United Kingdom')
+                                                
+                                                 else:
+                                                     
+                                                     self.variable_12.append(variable12.tempName)
+                                                     
+                                                 
+                                             else:
+                                                 self.variable_12.append(variable12.country)
+                                                 
+
+                                     except:
+                                         pass
+                                         
+                                     
+                        
+                        
+                         else:
+                             
+                             if any(self.word in self.articles.h3.text for self.word in self.articles_we_wont_scrape):
+                                 pass
+                             else:
+                                 for self.article_order_in_issue in self.articles.findAll('a',class_='issue-item__title visitable'):
+                                     if any(self.word in self.article_order_in_issue.h2.text for self.word in
+                                            self.articles_we_wont_scrape):
+                                         pass
+                                     else:
+                                         
+                                         try:
+                                             
+                                             self.abstract_scrape = self.article_order_in_issue.find_next_sibling('div',class_='content-item-format-links')
+
+                                             self.abstract_scrape_2 = self.abstract_scrape.find('a', title='Abstract')['href']
+                                             
+                                             if (self.abstract_scrape_2):
+                                                                                              
+                                                 self.link = self.article_order_in_issue.get('href')
+                                                 
+                                                 self.var12_url = 'https://onlinelibrary.wiley.com' + self.link
+                                                 
+                                                 variable12 = Variable12(self.var12_url) # new object is created
+                                                 
+                                                 if (variable12.country == None):
+                                                     
+                                                     if variable12.tempName in self.uk: 
+                    
+                                                         self.variable_12.append('United Kingdom')
+                                                
+                                                     else:
+                                                         
+                                                         self.variable_12.append(variable12.tempName)
+                                                         
+                                                 
+                                                 else:
+                                                     self.variable_12.append(variable12.country)
+                                                                                               
+                                          
+                                         except:
+                                             pass
+                     
+            self.update_file['Variable 12'] = self.variable_12 # 
+
+            self.update_file.to_csv(self.file, index=False)
+
+            self.update_file.to_excel(self.csv_title + '_excel_format_' + '.xlsx', index=None, header=True)
+
+        else:
+            pass        
+        
     def isSpecialIssue(self, row):
         # Defining if a row is part of a special issue
         try:
@@ -1252,6 +1397,7 @@ class MainPage:
         self.Fetch_Variable_9(True, self.before_year, self.after_year)
         self.Fetch_Variable_10(True, self.before_year, self.after_year)
         self.Fetch_Variable_11(True, self.before_year, self.after_year)
+        self.Fetch_Variable_12(True, self.before_year, self.after_year)        
         self.Fetch_Variable_13(True)
         self.statusbar.destroy()
         messagebox.showinfo('Confirmation', 'Articles Fetched and Saved')
@@ -1509,7 +1655,140 @@ class PreviousQueriesPage:
 
         self.database_connection.close()
         self.cursor.close()
+class Variable12():
+    
+    def __init__(self, url):
+        
+        self.url = url
+        self.uni= universities.API()
+        self.scraper = cfscrape.create_scraper()
+        self.source = self.scraper.get(url).text
+        self.soup = BeautifulSoup(self.source, 'lxml')
+        self.authors = self.soup.find('div', class_="author-info accordion-tabbed__content") # this class have common for all articles
+        self.flag = False
+        self.country = None
+        self.tempName = "None"
+       
+        
+        self.main()  
+        
+   
+    def orcidAccount(self):
+        # fetching data from article cointains class_='orcid-account
+        
+        b = self.authors.find('p', class_='orcid-account') # key class
+        c = b.find_next('p').text
+        d = c.split(",")
+        self.iterator(d)
+        
+    
+    def authorType(self):
+        # fetching data from article cointains class_='author-type'
+        b = self.authors.find('p', class_='author-type') # key class
+        c = b.find_next('p').text
+        d = c.split(",")
+        self.iterator(d)
+    
+    
+    def random(self):
+        # fetching data from selected part I am not sure this part contains author info.
+        b = self.authors.find_all('p')
+        try:
+            
+            c = b[3].text # we do not now maybe b[2] or b[4] has info about author
+            d = c.split(",")
+            self.iterator(d)
+        except:
+            pass
+    def general(self):
+        # fetching data from article only has "author-info accordion-tabbed__content" class
+        b = self.authors.find_all('p')
+        c = None 
+        for i in b:
 
+            if any("University" in s for s in i): # we only universtiy has containd "University" word
+                c = i.text 
+                break
+        if (c != None):    
+            d = c.split(",")
+            self.iterator(d)
+    
+    def University(self, s):
+        # remove empty character
+        t = 0 # counter
+        l = len(s)
+        while l > t: # this loop remove empty character in s string
+            
+            if s[t] != " ":
+                break
+            
+            t = t+1
+            
+        e = s[t:]  # return substring of d 
+        if ("University" in e):
+            self.tempName = e  # if university library return "None" I will use name of university 
+        
+        z=self.uni.lucky(name = e) 
+        return z
+
+
+
+    def iterator(self, d):
+        
+        l = len(d)
+        t = 0
+        c = None
+        
+        while (l > t and self.flag==False):
+                         
+             
+             if ("University" in d[t]) :
+                 
+     
+                 c = self.University(d[t])
+                 self.flag = True
+                 break
+             
+             elif ("London School of " in d[t]): # London School of Economcis and Political Science sentence is not contain word of "University"
+                 c = self.University(d[t])       # and this school is so much popular in BSJ.Thus, I check this condition in particular
+                 self.flag = True
+                 break             
+             
+             t += 1    
+        
+        if (c == None):
+            pass
+        else:
+            
+            self.flag = True           
+            self.country = c.country
+            return self.country   
+    
+    def main(self):
+        
+        try:
+            
+            
+            if (self.authors.find('p', class_='orcid-account')):
+                self.orcidAccount()
+            
+            elif (self.authors.find('p', class_='author-type')):
+                self.authorType()
+                
+                
+            if (self.country == None): 
+                
+                self.random()
+            
+            if (self.country == None):
+                                
+                self.general()
+                
+         
+        except:
+            
+            pass
+        
 
 def main():
     # main method
