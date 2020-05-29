@@ -4,11 +4,14 @@ from tkinter import *
 from tkinter import messagebox
 import pymysql
 import cfscrape
+import universities
 from bs4 import BeautifulSoup
 import pandas as pd
 import threading
 import geograpy
-import universities
+
+
+
 
 
 # new library for defining geography
@@ -756,7 +759,8 @@ class MainPage:
 
 
         # Defining the data section keywords
-        self.data_section_keywords = ['Method', 'method', 'conduct', 'Data', 'data', 'case studies', 'Case studies', 'Methodological background']
+        self.data_section_keywords = ['Method', 'method', 'Methods', 'conduct', 'Data', 'data', 'case studies', 'Case studies', 'Methodological background', 'The Research',
+                                      'Methodology', 'Research design', 'Findings', 'study', 'Methodologies']
 
         self.file = self.csv_title + '.csv'
 
@@ -820,8 +824,8 @@ class MainPage:
                                             'href']
 
                                         self.full_text_title = '''
-                                        Full text
-                                    '''
+            Full text
+        '''
 
                                         if not self.abstract_scrape.find('a', title=self.full_text_title):
 
@@ -1044,14 +1048,16 @@ class MainPage:
                    'Ludwig‐Maximilian University and London School of Economics and Politial Science',
                    'Department of Sociology University of Lancaster', 'London South Bank University.',
                    'London School of Economcis and Political Science', 'Department of Sociology Lancaster University'
-                   'Darwin College University of Kent', 'Bangor University', 'Buckinghamshire Chilterns University College',
+                                                                       'Darwin College University of Kent',
+                   'Bangor University', 'Buckinghamshire Chilterns University College',
                    'Cardiff University Business School', 'Cardiff University School of Social Sciences'
-                   'Department of Sociology University of Manchester', 'Department of Sociology University of Surrey'] # this schools are not recognized by python university library
-       
+                                                         'Department of Sociology University of Manchester',
+                   'Department of Sociology University of Surrey']  # this schools are not recognized by python university library
+
         self.file = self.csv_title + '.csv'
         self.update_file = pd.read_csv(self.file)
         self.update_index = 0
-        
+
         if active is True:
             self.database_connection = DatabaseConnector().get_conn()
             self.cursor = self.database_connection.cursor()
@@ -1068,119 +1074,121 @@ class MainPage:
             self.database_connection.commit()
             self.database_connection.close()
             self.cursor.close()
-            
+
             for i in range(before_year, after_year - 1, -1):
- 
-                 self.html_source = self.scraper.get(self.british_journal_url + str(i)).text
-                 self.soup = BeautifulSoup(self.html_source, 'lxml')
- 
-                 for self.journal in self.soup.findAll('li', class_='card clearfix'):
- 
-                     self.issue_url = 'https://onlinelibrary.wiley.com' + self.journal.find('a')['href']
-                     self.issue_and_volume_info = self.journal.find('a', class_='visitable').text
- 
- 
-                     self.html_source_2 = self.scraper_2.get(self.issue_url).text
-                     self.article_soup = BeautifulSoup(self.html_source_2, 'lxml')
-                     
-                     
-                     
-                     for self.articles in self.article_soup.findAll('div',class_='card issue-items-container exportCitationWrapper'):
-                         if not self.articles.find('h3'):
-                             for self.article_order_in_issue in self.articles.findAll('a',class_='issue-item__title visitable'):
-                                 if any(self.word in self.article_order_in_issue.h2.text for self.word in self.articles_we_wont_scrape):
-                                     pass
-                                 else:
-                                     try:
-                                         
-                                         
-                                         self.abstract_scrape = self.article_order_in_issue.find_next_sibling('div',class_='content-item-format-links')
 
-                                         self.abstract_scrape_2 = self.abstract_scrape.find('a', title='Abstract')['href']
-                                        
-                                         if (self.abstract_scrape_2):
-                                             
-                                        
-                                             self.link = self.article_order_in_issue.get('href')
-                                             
-                                             self.var12_url = 'https://onlinelibrary.wiley.com' + self.link
-                                             
-                                             variable12 = Variable12(self.var12_url) # new object is created
-                                           
-                                             if (variable12.country == None):
-                                                 
-                                                                                                                                                       
-                                                 if variable12.tempName in self.uk: 
-                    
+                self.html_source = self.scraper.get(self.british_journal_url + str(i)).text
+                self.soup = BeautifulSoup(self.html_source, 'lxml')
+
+                for self.journal in self.soup.findAll('li', class_='card clearfix'):
+
+                    self.issue_url = 'https://onlinelibrary.wiley.com' + self.journal.find('a')['href']
+                    self.issue_and_volume_info = self.journal.find('a', class_='visitable').text
+
+                    self.html_source_2 = self.scraper_2.get(self.issue_url).text
+                    self.article_soup = BeautifulSoup(self.html_source_2, 'lxml')
+
+                    for self.articles in self.article_soup.findAll('div',
+                                                                   class_='card issue-items-container exportCitationWrapper'):
+                        if not self.articles.find('h3'):
+                            for self.article_order_in_issue in self.articles.findAll('a',
+                                                                                     class_='issue-item__title visitable'):
+                                if any(self.word in self.article_order_in_issue.h2.text for self.word in
+                                       self.articles_we_wont_scrape):
+                                    pass
+                                else:
+                                    try:
+
+                                        self.abstract_scrape = self.article_order_in_issue.find_next_sibling('div',
+                                                                                                             class_='content-item-format-links')
+
+                                        self.abstract_scrape_2 = self.abstract_scrape.find('a', title='Abstract')[
+                                            'href']
+
+                                        if (self.abstract_scrape_2):
+
+                                            self.link = self.article_order_in_issue.get('href')
+
+                                            self.var12_url = 'https://onlinelibrary.wiley.com' + self.link
+
+                                            variable12 = Variable12(self.var12_url)  # new object is created
+
+                                            if (variable12.country == None):
+
+                                                if variable12.tempName in self.uk:
+
                                                     self.variable_12.append('United Kingdom')
-                                                
-                                                 else:
-                                                     
-                                                     self.variable_12.append(variable12.tempName)
-                                                     
-                                                 
-                                             else:
-                                                 self.variable_12.append(variable12.country)
-                                                 
 
-                                     except:
-                                         pass
-                                         
-                                     
-                        
-                        
-                         else:
-                             
-                             if any(self.word in self.articles.h3.text for self.word in self.articles_we_wont_scrape):
-                                 pass
-                             else:
-                                 for self.article_order_in_issue in self.articles.findAll('a',class_='issue-item__title visitable'):
-                                     if any(self.word in self.article_order_in_issue.h2.text for self.word in
-                                            self.articles_we_wont_scrape):
-                                         pass
-                                     else:
-                                         
-                                         try:
-                                             
-                                             self.abstract_scrape = self.article_order_in_issue.find_next_sibling('div',class_='content-item-format-links')
+                                                else:
 
-                                             self.abstract_scrape_2 = self.abstract_scrape.find('a', title='Abstract')['href']
-                                             
-                                             if (self.abstract_scrape_2):
-                                                                                              
-                                                 self.link = self.article_order_in_issue.get('href')
-                                                 
-                                                 self.var12_url = 'https://onlinelibrary.wiley.com' + self.link
-                                                 
-                                                 variable12 = Variable12(self.var12_url) # new object is created
-                                                 
-                                                 if (variable12.country == None):
-                                                     
-                                                     if variable12.tempName in self.uk: 
-                    
-                                                         self.variable_12.append('United Kingdom')
-                                                
-                                                     else:
-                                                         
-                                                         self.variable_12.append(variable12.tempName)
-                                                         
-                                                 
-                                                 else:
-                                                     self.variable_12.append(variable12.country)
-                                                                                               
-                                          
-                                         except:
-                                             pass
-                     
-            self.update_file['Variable 12'] = self.variable_12 # 
+                                                    self.variable_12.append(variable12.tempName)
+
+
+                                            else:
+                                                self.variable_12.append(variable12.country)
+
+
+                                    except:
+                                        pass
+
+
+
+
+                        else:
+
+                            if any(self.word in self.articles.h3.text for self.word in self.articles_we_wont_scrape):
+                                pass
+                            else:
+                                for self.article_order_in_issue in self.articles.findAll('a',
+                                                                                         class_='issue-item__title visitable'):
+                                    if any(self.word in self.article_order_in_issue.h2.text for self.word in
+                                           self.articles_we_wont_scrape):
+                                        pass
+                                    else:
+
+                                        try:
+
+                                            self.abstract_scrape = self.article_order_in_issue.find_next_sibling('div',
+                                                                                                                 class_='content-item-format-links')
+
+                                            self.abstract_scrape_2 = self.abstract_scrape.find('a', title='Abstract')[
+                                                'href']
+
+                                            if (self.abstract_scrape_2):
+
+                                                self.link = self.article_order_in_issue.get('href')
+
+                                                self.var12_url = 'https://onlinelibrary.wiley.com' + self.link
+
+                                                variable12 = Variable12(self.var12_url)  # new object is created
+
+                                                if (variable12.country == None):
+
+                                                    if variable12.tempName in self.uk:
+
+                                                        self.variable_12.append('United Kingdom')
+
+                                                    else:
+
+                                                        self.variable_12.append(variable12.tempName)
+
+
+                                                else:
+                                                    self.variable_12.append(variable12.country)
+
+
+                                        except:
+                                            pass
+
+            self.update_file['Variable 12'] = self.variable_12  #
 
             self.update_file.to_csv(self.file, index=False)
 
             self.update_file.to_excel(self.csv_title + '_excel_format_' + '.xlsx', index=None, header=True)
 
         else:
-            pass        
-        
+            pass
+
     def isSpecialIssue(self, row):
         # Defining if a row is part of a special issue
         try:
@@ -1237,6 +1245,35 @@ class MainPage:
 
 
     def Fetch_Articles(self, before_year, after_year):
+
+        # defining initial states for the advances variables
+
+        self.fetch_v8 = False
+        self.fetch_v9 = False
+        self.fetch_v10 = False
+        self.fetch_v11= False
+        self.fetch_v12 = False
+        self.fetch_v13 = False
+
+
+        # getting the values from our search bar
+
+        self.advanced_variables_to_be_fetched = self.listbox.get(0, END)
+
+        # fetching the variables if their keyword is given
+
+        self.fetch_v8 = any(x in self.advanced_variables_to_be_fetched for x in ['Variable 8', 'v8', 'variable 8'])
+
+        self.fetch_v9 = any(x in self.advanced_variables_to_be_fetched for x in ['Variable 9', 'v9', 'variable 9'])
+
+        self.fetch_v10 = any(x in self.advanced_variables_to_be_fetched for x in ['Variable 10', 'v10', 'variable 10'])
+
+        self.fetch_v11 = any(x in self.advanced_variables_to_be_fetched for x in ['Variable 11', 'v11', 'variable 11'])
+
+        self.fetch_v12 = any(x in self.advanced_variables_to_be_fetched for x in ['Variable 12', 'v12', 'variable 12'])
+
+        self.fetch_v13 = any(x in self.advanced_variables_to_be_fetched for x in ['Variable 13', 'v13', 'variable 13'])
+
 
         # Fetching article code from phase 1
 
@@ -1393,12 +1430,12 @@ class MainPage:
         self.read_file.to_excel(self.csv_title + '_excel_format_' + '.xlsx', index=None,
                                 header=True)  # Formatting the CSV to XLSX(Excel Table)
 
-        self.Fetch_Variable_8(True, self.before_year, self.after_year)
-        self.Fetch_Variable_9(True, self.before_year, self.after_year)
-        self.Fetch_Variable_10(True, self.before_year, self.after_year)
-        self.Fetch_Variable_11(True, self.before_year, self.after_year)
-        self.Fetch_Variable_12(True, self.before_year, self.after_year)        
-        self.Fetch_Variable_13(True)
+        self.Fetch_Variable_8(self.fetch_v8, self.before_year, self.after_year)
+        self.Fetch_Variable_9(self.fetch_v9, self.before_year, self.after_year)
+        self.Fetch_Variable_10(self.fetch_v10, self.before_year, self.after_year)
+        self.Fetch_Variable_11(self.fetch_v11, self.before_year, self.after_year)
+        self.Fetch_Variable_12(self.fetch_v12, self.before_year, self.after_year)
+        self.Fetch_Variable_13(self.fetch_v13)
         self.statusbar.destroy()
         messagebox.showinfo('Confirmation', 'Articles Fetched and Saved')
 
@@ -1424,6 +1461,8 @@ class MainPage:
         list_data.pop(list_data.index(selected))
 
     def __init__(self, master, username):
+
+
 
         self.username_variable = username
 
@@ -1496,6 +1535,9 @@ class MainPage:
         self.Queries = Button(self.Box2, text="Recently Executed Queries", command=self.OpenPreviousQueriesPage)
         self.Queries.grid(row=0, padx=5, pady=5)
 
+        self.BrowseByVariable1 = Button(self.Box1, text="Advanced variables", command=self.OpenAdvancedVariablesPage)
+        self.BrowseByVariable1.grid(row=5, column=6, sticky='W')
+
         # PRESELECTED VARIBALES WIDGETS
         self.Box3 = LabelFrame(self.master, text=" Basic Codebook Variables: ")
         self.Box3.grid(row=3, column=17, columnspan=3, sticky='W', padx=5, pady=5, ipadx=5, ipady=5)
@@ -1554,6 +1596,11 @@ class MainPage:
         self.master.withdraw()
         self.newWindow = Toplevel(self.master)
         self.app = PreviousQueriesPage(self.newWindow, self.user_id)
+
+    def OpenAdvancedVariablesPage(self):
+
+        self.newWindow = Toplevel(self.master)
+        self.app = AdvancedVaribalesPage(self.newWindow)
 
     def on_enter_variable_1(self, event):
         self.Variable1.configure(text="Journal Title")
@@ -1655,140 +1702,207 @@ class PreviousQueriesPage:
 
         self.database_connection.close()
         self.cursor.close()
+
+
+class AdvancedVaribalesPage:
+
+    # Advanced Variables Explantion Page
+
+    def __init__(self, master):
+        self.master = master
+        self.frame = Frame(self.master)
+
+        self.Box1 = LabelFrame(self.master, text="Advanced Variables")
+        self.Box1.grid(row=1, columnspan=15, sticky='W', padx=5, pady=5, ipadx=5, ipady=5)
+
+        self.label1 = Label(self.Box1, text="Variable 8: Does the TITLE specify location/context?")
+        self.label1.grid(row=1, column=0, sticky='W', pady=4)
+
+        self.label1 = Label(self.Box1, text="0	No")
+        self.label1.grid(row=2, column=0, sticky='W', padx=5)
+        self.label1 = Label(self.Box1, text="1	Yes-subnational (single city, region, transnational regions, etc.)")
+        self.label1.grid(row=3, column=0, sticky='W', padx=5)
+        self.label1 = Label(self.Box1, text="2	Yes-subnational (comparative: multiple city, region, etc.)")
+        self.label1.grid(row=4, column=0, sticky='W', padx=5)
+        self.label1 = Label(self.Box1,
+                            text="3	Yes-national (single country in the geographic coverage of journal—see variable 2)")
+        self.label1.grid(row=5, column=0, sticky='W', padx=5)
+        self.label1 = Label(self.Box1,
+                            text="4	Yes-national (single country outside the geographic coverage of journal—see variable 2)")
+        self.label1.grid(row=6, column=0, sticky='W', padx=5)
+        self.label1 = Label(self.Box1, text="5	Yes-national (comparative: multiple countries)")
+        self.label1.grid(row=7, column=0, sticky='W', padx=5)
+        self.label1 = Label(self.Box1, text="6	Yes-implied (phrases like “in 5 countries” or “in 2 regions”)")
+        self.label1.grid(row=8, column=0, sticky='W', padx=5)
+        self.label1 = Label(self.Box1,
+                            text="7	Yes-supranational (EU, NATO, NAFTA, UN, The Arab League, OECD, OPEC, Organization of Islamic Cooperation, ASEAN, SAARC, African Union, etc.)")
+        self.label1.grid(row=9, column=0, sticky='W', padx=5)
+
+        self.label1 = Label(self.Box1,
+                            text="Variable 9: Does the TITLE include explicit temporal markers (year and century)?")
+        self.label1.grid(row=10, column=0, sticky='W', pady=4)
+
+        self.label1 = Label(self.Box1, text="0	No")
+        self.label1.grid(row=11, column=0, sticky='W', padx=5)
+        self.label1 = Label(self.Box1, text="1	Yes")
+        self.label1.grid(row=12, column=0, sticky='W', padx=5)
+
+        self.label1 = Label(self.Box1, text="Variable 10: Does the ABSTRACT specify location/context?")
+        self.label1.grid(row=13, column=0, sticky='W', pady=4)
+
+        self.label1 = Label(self.Box1, text="     SAME AS VARIABLE 8")
+        self.label1.grid(row=14, column=0, sticky='W', padx=5)
+
+        self.label1 = Label(self.Box1, text="Variable 11: Does the FULL TEXT specify location/context?")
+        self.label1.grid(row=15, column=0, sticky='W', pady=4)
+
+        self.label1 = Label(self.Box1, text="     SAME AS VARIABLE 8")
+        self.label1.grid(row=16, column=0, sticky='W', padx=5)
+
+        self.label1 = Label(self.Box1,
+                            text="Variable 12: Lead author’s country (institutional location) at the time of publication")
+        self.label1.grid(row=17, column=0, sticky='W', pady=4)
+
+        self.label1 = Label(self.Box1, text="Variable 13: Is the article part of a special issue?")
+        self.label1.grid(row=18, column=0, sticky='W', pady=4)
+
+        self.label1 = Label(self.Box1, text="0	No")
+        self.label1.grid(row=19, column=0, sticky='W', padx=5)
+        self.label1 = Label(self.Box1, text="1	Yes")
+        self.label1.grid(row=20, column=0, sticky='W', padx=5)
+
+
+
+
 class Variable12():
-    
+
     def __init__(self, url):
-        
+
         self.url = url
-        self.uni= universities.API()
+        self.uni = universities.API()
         self.scraper = cfscrape.create_scraper()
         self.source = self.scraper.get(url).text
         self.soup = BeautifulSoup(self.source, 'lxml')
-        self.authors = self.soup.find('div', class_="author-info accordion-tabbed__content") # this class have common for all articles
+        self.authors = self.soup.find('div',
+                                      class_="author-info accordion-tabbed__content")  # this class have common for all articles
         self.flag = False
         self.country = None
         self.tempName = "None"
-       
-        
-        self.main()  
-        
-   
+
+        self.main()
+
     def orcidAccount(self):
         # fetching data from article cointains class_='orcid-account
-        
-        b = self.authors.find('p', class_='orcid-account') # key class
+
+        b = self.authors.find('p', class_='orcid-account')  # key class
         c = b.find_next('p').text
         d = c.split(",")
         self.iterator(d)
-        
-    
+
     def authorType(self):
         # fetching data from article cointains class_='author-type'
-        b = self.authors.find('p', class_='author-type') # key class
+        b = self.authors.find('p', class_='author-type')  # key class
         c = b.find_next('p').text
         d = c.split(",")
         self.iterator(d)
-    
-    
+
     def random(self):
         # fetching data from selected part I am not sure this part contains author info.
         b = self.authors.find_all('p')
         try:
-            
-            c = b[3].text # we do not now maybe b[2] or b[4] has info about author
+
+            c = b[3].text  # we do not now maybe b[2] or b[4] has info about author
             d = c.split(",")
             self.iterator(d)
         except:
             pass
+
     def general(self):
         # fetching data from article only has "author-info accordion-tabbed__content" class
         b = self.authors.find_all('p')
-        c = None 
+        c = None
         for i in b:
 
-            if any("University" in s for s in i): # we only universtiy has containd "University" word
-                c = i.text 
+            if any("University" in s for s in i):  # we only universtiy has containd "University" word
+                c = i.text
                 break
-        if (c != None):    
+        if (c != None):
             d = c.split(",")
             self.iterator(d)
-    
+
     def University(self, s):
         # remove empty character
-        t = 0 # counter
+        t = 0  # counter
         l = len(s)
-        while l > t: # this loop remove empty character in s string
-            
+        while l > t:  # this loop remove empty character in s string
+
             if s[t] != " ":
                 break
-            
-            t = t+1
-            
-        e = s[t:]  # return substring of d 
+
+            t = t + 1
+
+        e = s[t:]  # return substring of d
         if ("University" in e):
-            self.tempName = e  # if university library return "None" I will use name of university 
-        
-        z=self.uni.lucky(name = e) 
+            self.tempName = e  # if university library return "None" I will use name of university
+
+        z = self.uni.lucky(name=e)
         return z
 
-
-
     def iterator(self, d):
-        
+
         l = len(d)
         t = 0
         c = None
-        
-        while (l > t and self.flag==False):
-                         
-             
-             if ("University" in d[t]) :
-                 
-     
-                 c = self.University(d[t])
-                 self.flag = True
-                 break
-             
-             elif ("London School of " in d[t]): # London School of Economcis and Political Science sentence is not contain word of "University"
-                 c = self.University(d[t])       # and this school is so much popular in BSJ.Thus, I check this condition in particular
-                 self.flag = True
-                 break             
-             
-             t += 1    
-        
+
+        while (l > t and self.flag == False):
+
+            if ("University" in d[t]):
+
+                c = self.University(d[t])
+                self.flag = True
+                break
+
+            elif ("London School of " in d[
+                t]):  # London School of Economcis and Political Science sentence is not contain word of "University"
+                c = self.University(
+                    d[t])  # and this school is so much popular in BSJ.Thus, I check this condition in particular
+                self.flag = True
+                break
+
+            t += 1
+
         if (c == None):
             pass
         else:
-            
-            self.flag = True           
+
+            self.flag = True
             self.country = c.country
-            return self.country   
-    
+            return self.country
+
     def main(self):
-        
+
         try:
-            
-            
+
             if (self.authors.find('p', class_='orcid-account')):
                 self.orcidAccount()
-            
+
             elif (self.authors.find('p', class_='author-type')):
                 self.authorType()
-                
-                
-            if (self.country == None): 
-                
-                self.random()
-            
+
             if (self.country == None):
-                                
+                self.random()
+
+            if (self.country == None):
                 self.general()
-                
-         
+
+
         except:
-            
+
             pass
-        
+
+
+
+
 
 def main():
     # main method
