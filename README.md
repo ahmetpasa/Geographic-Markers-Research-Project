@@ -19,7 +19,8 @@ Dependencies
 
 Installation and Use
 The software can be installed in two ways. 
-Firstly, the software will have a packaged exe file that can be run on windows machines.
+Firstly, the software will have a packaged exe file that can be run on windows machines which can be downloaded from
+https://www.dropbox.com/s/liqqjpqfs5w8st7/GeoMarkersApp.zip?dl=0
 
 Alternatively, the source code can be accessed and run after installing all dependencies above from https://github.com/Areezy/Geographic-Markers-Research-Project/tree/master/Phase%202 
 
